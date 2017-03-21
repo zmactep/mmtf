@@ -6,6 +6,7 @@ import           Bio.MMTF.Decode.Codec
 import           Bio.MMTF.Decode.MessagePack
 import           Bio.MMTF.Type
 
+import           Control.Monad               ((>=>))
 import           Data.Map.Strict             (Map)
 import           Data.MessagePack            (Object)
 import           Data.Text                   (Text)
@@ -40,7 +41,7 @@ atomData mp = do ail' <- (codec8 . parseBinary <$>) <$> atPM mp "atomIdList" asB
 
 -- |Parses group data from ObjectMap
 groupData :: Monad m => Map Text Object -> m GroupData
-groupData mp = do gl' <- atP mp "groupList" asObjectList >>= sequence . map (\x -> transformObjectMap x >>= groupType)
+groupData mp = do gl' <- atP mp "groupList" asObjectList >>= sequence . map (transformObjectMap >=> groupType)
                   gtl' <- codec4 . parseBinary <$> atP mp "groupTypeList" asBinary
                   gil' <- codec8 . parseBinary <$> atP mp "groupIdList" asBinary
                   ssl' <- (map ssDec . codec2 . parseBinary <$>) <$> atPM mp "secStructList" asBinary
@@ -74,8 +75,8 @@ structureData mp = do ttl' <- atPM mp "title" asStr
                       sg'  <- atPM mp "spaceGroup" asStr
                       uc'  <- (>>= ucDec) <$> atPM mp "unitCell" asFloatList
                       nol' <- ((>>= asFloatList) <$>) <$> atPM mp "ncsOperatorList" asObjectList
-                      bal' <- atPM mp "bioAssemblyList" asObjectList
-                      el'  <- atPM mp "entityList" asObjectList
+                      bal' <- (>>= sequence . map (transformObjectMap >=> bioAssembly)) <$> atPM mp "bioAssemblyList" asObjectList
+                      el'  <- (>>= sequence . map (transformObjectMap >=> entity)) <$> atPM mp "entityList" asObjectList
                       res' <- atPM mp "resolution" asFloat
                       rf'  <- atPM mp "rFree" asFloat
                       rw'  <- atPM mp "rWork" asFloat
@@ -83,4 +84,24 @@ structureData mp = do ttl' <- atPM mp "title" asStr
                       btl' <- (codec4 . parseBinary <$>) <$> atPM mp "bondAtomList" asBinary
                       bol' <- (codec2 . parseBinary <$>) <$> atPM mp "bondOrderList" asBinary
                       pure $ StructureData ttl' sid' dd' rd' nb' na' ng' nc' nm' sg' uc' nol'
-                                           Nothing Nothing res' rf' rw' em' btl' bol'
+                                           bal' el' res' rf' rw' em' btl' bol'
+
+-- |Parses bio assembly data from ObjectMap
+bioAssembly :: Monad m => Map Text Object -> m Assembly
+bioAssembly mp = do nme' <- atP mp "name" asStr
+                    tlt' <- atP mp "transformList" asObjectList >>= sequence . map (transformObjectMap >=> transform)
+                    pure $ Assembly tlt' nme'
+
+-- |Parses transform data from ObjectMap
+transform :: Monad m => Map Text Object -> m Transform
+transform mp = do cil' <- atP mp "chainIndexList" asIntList
+                  mtx' <- atP mp "matrix" asFloatList
+                  pure $ Transform cil' mtx'
+
+-- |Parses entity data from ObjectMap
+entity :: Monad m => Map Text Object -> m Entity
+entity mp = do cil' <- atP mp "chainIndexList" asIntList
+               dsc' <- atP mp "description" asStr
+               tpe' <- atP mp "type" asStr
+               sqc' <- atP mp "sequence" asStr
+               pure $ Entity cil' dsc' tpe' sqc'

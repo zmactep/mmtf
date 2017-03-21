@@ -2,14 +2,14 @@
 
 module Bio.MMTF.MessagePack where
 
-import Bio.MMTF.Type
-import Bio.MMTF.Decode
-import Bio.MMTF.Decode.MessagePack
+import           Bio.MMTF.Decode
+import           Bio.MMTF.Decode.MessagePack
+import           Bio.MMTF.Type
 
-import Data.MessagePack (MessagePack (..))
+import           Data.MessagePack            (MessagePack (..))
 
 instance MessagePack MMTF where
-  toObject = undefined
+  toObject = undefined -- TODO: add MMTF encoding
   fromObject obj = do mp <- transformObjectMap obj
                       f <- formatData mp
                       s <- structureData mp

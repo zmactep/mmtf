@@ -3,11 +3,11 @@ module Bio.MMTF
   , decode
   ) where
 
-import Bio.MMTF.Type as T
-import Bio.MMTF.MessagePack ()
+import           Bio.MMTF.MessagePack ()
+import           Bio.MMTF.Type        as T
 
-import Data.MessagePack (unpack)
-import Data.ByteString.Lazy (ByteString)
+import           Data.ByteString.Lazy (ByteString)
+import           Data.MessagePack     (unpack)
 
 -- |Decodes a 'ByteString' to 'MMTF'
 decode :: Monad m => ByteString -> m MMTF
