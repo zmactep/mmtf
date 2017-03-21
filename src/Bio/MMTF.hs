@@ -1,10 +1,10 @@
 module Bio.MMTF
-  ( module T
+  ( module Bio.MMTF.Type
   , decode
   ) where
 
 import           Bio.MMTF.MessagePack ()
-import           Bio.MMTF.Type        as T
+import           Bio.MMTF.Type
 
 import           Data.ByteString.Lazy (ByteString)
 import           Data.MessagePack     (unpack)

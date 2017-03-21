@@ -1,5 +1,5 @@
 name:                mmtf
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Macromolecular Transmission Format implementation
 description:         Haskell implementation of MMTF biological structure format.
 homepage:            https://github.com/zmactep/mmtf#readme
