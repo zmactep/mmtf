@@ -1,35 +1,14 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Bio.MMTF.Decode where
 
 import           Bio.MMTF.Decode.Codec
+import           Bio.MMTF.Decode.MessagePack
 import           Bio.MMTF.Type
 
-import           Data.ByteString.Lazy  (ByteString, fromStrict)
-import           Data.Map.Strict       (Map, fromList)
-import qualified Data.Map.Strict       as M (lookup)
-import           Data.MessagePack
-import           Data.Text             (Text)
-import qualified Data.Text             as T (unpack)
-
-instance MessagePack MMTF where
-  toObject = undefined
-  fromObject obj = do mp <- transformObjectMap obj
-                      f <- formatData mp
-                      s <- structureData mp
-                      m <- modelData mp
-                      c <- chainData mp
-                      g <- groupData mp
-                      a <- atomData mp
-                      pure $ MMTF f s m c g a
-
-transformObjectMap :: Monad m => Object -> m (Map Text Object)
-transformObjectMap (ObjectMap kv) = let mkPair :: Monad m => (Object, Object) -> m (Text, Object)
-                                        mkPair ((ObjectStr txt), v) = pure (txt, v)
-                                        mkPair _ = fail "Non-string key"
-                                    in  fromList <$> sequence (map mkPair kv)
-transformObjectMap _ = fail "Wrong MessagePack MMTF format"
+import           Data.Map.Strict             (Map)
+import           Data.MessagePack            (Object)
+import           Data.Text                   (Text)
 
 -- |Parses format data from ObjectMap
 formatData :: Monad m => Map Text Object -> m FormatData
@@ -81,9 +60,10 @@ groupType mp = do fcl' <- atP mp "formalChargeList" asIntList
                   cct' <- atP mp "chemCompType" asStr
                   pure $ GroupType fcl' anl' el' bal' bol' gn' slc' cct'
 
+-- |Parses structure data from ObjectMap
 structureData :: Monad m => Map Text Object -> m StructureData
 structureData mp = do ttl' <- atPM mp "title" asStr
-                      sid' <- atPM mp "strucutreId" asStr
+                      sid' <- atPM mp "structureId" asStr
                       dd'  <- atPM mp "depositionDate" asStr
                       rd'  <- atPM mp "releaseDate" asStr
                       nb'  <- atP mp "numBonds" asInt
@@ -100,55 +80,7 @@ structureData mp = do ttl' <- atPM mp "title" asStr
                       rf'  <- atPM mp "rFree" asFloat
                       rw'  <- atPM mp "rWork" asFloat
                       em'  <- atPM mp "experimentalMethods" asStrList
-                      bal' <- (codec4 . parseBinary <$>) <$> atPM mp "bondAtomList" asBinary
+                      btl' <- (codec4 . parseBinary <$>) <$> atPM mp "bondAtomList" asBinary
                       bol' <- (codec2 . parseBinary <$>) <$> atPM mp "bondOrderList" asBinary
                       pure $ StructureData ttl' sid' dd' rd' nb' na' ng' nc' nm' sg' uc' nol'
-                                           (Just ()) (Just ()) res' rf' rw' em' bal' bol'
-
--- Helper functions
-
-atP :: Monad m => Map Text Object -> Text -> (Object -> m a) -> m a
-atP m k conv =
-  case M.lookup k m of
-    Just x  -> conv x
-    Nothing -> fail $ "Required field '" ++ uk ++ "' was not found"
-  where uk = T.unpack k
-
-atPM :: Monad m => Map Text Object -> Text -> (Object -> m a) -> m (Maybe a)
-atPM m k conv = traverse conv $ M.lookup k m
-
-asStr :: Monad m => Object -> m Text
-asStr (ObjectStr s) = pure s
-asStr _             = fail "Not a string data"
-
-asChar :: Monad m => Object -> m Char
-asChar = (head . T.unpack <$>) . asStr
-
-asInt :: (Monad m, Integral a) => Object -> m a
-asInt (ObjectInt i)  = pure (fromIntegral i)
-asInt (ObjectWord w) = pure (fromIntegral w)
-asInt _              = fail "Not an int data"
-
-asFloat :: Monad m => Object -> m Float
-asFloat (ObjectFloat f) = pure f
-asFloat _               = fail "Not a float data"
-
-asIntList :: (Monad m, Integral a) => Object -> m [a]
-asIntList (ObjectArray l) = sequence $ map asInt l
-asIntList _               = fail "Not an array of ints data"
-
-asStrList :: Monad m => Object -> m [Text]
-asStrList (ObjectArray l) = sequence $ map asStr l
-asStrList _               = fail "Not an array of string data"
-
-asFloatList :: Monad m => Object -> m [Float]
-asFloatList (ObjectArray l) = sequence $ map asFloat l
-asFloatList _               = fail "Not an array of float data"
-
-asObjectList :: Monad m => Object -> m [Object]
-asObjectList (ObjectArray l) = pure l
-asObjectList _               = fail "Not an array data"
-
-asBinary :: Monad m => Object -> m ByteString
-asBinary (ObjectBin bs) = pure (fromStrict bs)
-asBinary _              = fail "Not a binary data"
+                                           Nothing Nothing res' rf' rw' em' btl' bol'

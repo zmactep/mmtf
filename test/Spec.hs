@@ -1,17 +1,14 @@
-{-# OPTIONS_GHC -fno-warn-name-shadowing #-}
+{-# LANGUAGE OverloadedStrings #-}
 
-import           Bio.MMTF.Decode
-import           Bio.MMTF.Type
+import           Bio.MMTF
 import qualified Data.ByteString.Lazy as B
-import           Data.MessagePack
 import           Test.Hspec
-import           Test.QuickCheck
 
 main :: IO ()
 main = hspec $
   describe "Hello World" $
     it "should work" $ do
       contents <- B.readFile "resource/1FSD.mmtf"
-      m <- (unpack contents) :: IO MMTF
-      print m
-      1 `shouldBe` 1
+      m <- decode contents
+      let sid = (structureId . structure) m
+      sid `shouldBe` Just "1FSD"
