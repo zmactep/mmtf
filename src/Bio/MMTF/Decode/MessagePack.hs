@@ -9,9 +9,9 @@ import qualified Data.Text             as T (unpack)
 
 transformObjectMap :: Monad m => Object -> m (Map Text Object)
 transformObjectMap (ObjectMap kv) = let mkPair :: Monad m => (Object, Object) -> m (Text, Object)
-                                        mkPair ((ObjectStr txt), v) = pure (txt, v)
+                                        mkPair (ObjectStr txt, v) = pure (txt, v)
                                         mkPair _ = fail "Non-string key"
-                                    in  fromList <$> sequence (map mkPair kv)
+                                    in  fromList <$> traverse mkPair kv
 transformObjectMap _ = fail "Wrong MessagePack MMTF format"
 
 atP :: Monad m => Map Text Object -> Text -> (Object -> m a) -> m a
@@ -41,15 +41,15 @@ asFloat (ObjectFloat f) = pure f
 asFloat _               = fail "Not a float data"
 
 asIntList :: (Monad m, Integral a) => Object -> m [a]
-asIntList (ObjectArray l) = sequence $ map asInt l
+asIntList (ObjectArray l) = traverse asInt l
 asIntList _               = fail "Not an array of ints data"
 
 asStrList :: Monad m => Object -> m [Text]
-asStrList (ObjectArray l) = sequence $ map asStr l
+asStrList (ObjectArray l) = traverse asStr l
 asStrList _               = fail "Not an array of string data"
 
 asFloatList :: Monad m => Object -> m [Float]
-asFloatList (ObjectArray l) = sequence $ map asFloat l
+asFloatList (ObjectArray l) = traverse asFloat l
 asFloatList _               = fail "Not an array of float data"
 
 asObjectList :: Monad m => Object -> m [Object]

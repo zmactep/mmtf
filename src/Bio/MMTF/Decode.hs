@@ -11,24 +11,28 @@ import           Data.Map.Strict             (Map)
 import           Data.MessagePack            (Object)
 import           Data.Text                   (Text)
 
--- |Parses format data from ObjectMap
+-- | Parses format data from ObjectMap
+--
 formatData :: Monad m => Map Text Object -> m FormatData
 formatData mp = do v <- atP mp "mmtfVersion" asStr
                    p <- atP mp "mmtfProducer" asStr
                    pure $ FormatData v p
 
--- |Parses model data from ObjectMap
+-- | Parses model data from ObjectMap
+--
 modelData :: Monad m => Map Text Object -> m ModelData
-modelData mp = atP mp "chainsPerModel" asIntList >>= return . ModelData
+modelData mp = ModelData <$> atP mp "chainsPerModel" asIntList
 
--- |Parses chain data from ObjectMap
+-- | Parses chain data from ObjectMap
+--
 chainData :: Monad m => Map Text Object -> m ChainData
 chainData mp = do gpc <- atP mp "groupsPerChain" asIntList
                   cil <- codec5 . parseBinary <$> atP mp "chainIdList" asBinary
                   cnl <- (codec5 . parseBinary <$>) <$> atPM mp "chainNameList" asBinary
                   pure $ ChainData gpc cil cnl
 
--- |Parses atom data from ObjectMap
+-- | Parses atom data from ObjectMap
+--
 atomData :: Monad m => Map Text Object -> m AtomData
 atomData mp = do ail' <- (codec8 . parseBinary <$>) <$> atPM mp "atomIdList" asBinary
                  all' <- (codec6 . parseBinary <$>) <$> atPM mp "altLocList" asBinary
@@ -39,9 +43,10 @@ atomData mp = do ail' <- (codec8 . parseBinary <$>) <$> atPM mp "atomIdList" asB
                  ol' <-  (codec9 . parseBinary <$>) <$> atPM mp "occupancyList" asBinary
                  pure $ AtomData ail' all' bfl' xcl' ycl' zcl' ol'
 
--- |Parses group data from ObjectMap
+-- | Parses group data from ObjectMap
+--
 groupData :: Monad m => Map Text Object -> m GroupData
-groupData mp = do gl' <- atP mp "groupList" asObjectList >>= sequence . map (transformObjectMap >=> groupType)
+groupData mp = do gl' <- atP mp "groupList" asObjectList >>= traverse (transformObjectMap >=> groupType)
                   gtl' <- codec4 . parseBinary <$> atP mp "groupTypeList" asBinary
                   gil' <- codec8 . parseBinary <$> atP mp "groupIdList" asBinary
                   ssl' <- (map ssDec . codec2 . parseBinary <$>) <$> atPM mp "secStructList" asBinary
@@ -49,7 +54,8 @@ groupData mp = do gl' <- atP mp "groupList" asObjectList >>= sequence . map (tra
                   sil' <- (codec8 . parseBinary <$>) <$> atPM mp "sequenceIndexList" asBinary
                   pure $ GroupData gl' gtl' gil' ssl' icl' sil'
 
--- |Parses group type from ObjectMap
+-- | Parses group type from ObjectMap
+--
 groupType :: Monad m => Map Text Object -> m GroupType
 groupType mp = do fcl' <- atP mp "formalChargeList" asIntList
                   anl' <- atP mp "atomNameList" asStrList
@@ -61,7 +67,8 @@ groupType mp = do fcl' <- atP mp "formalChargeList" asIntList
                   cct' <- atP mp "chemCompType" asStr
                   pure $ GroupType fcl' anl' el' bal' bol' gn' slc' cct'
 
--- |Parses structure data from ObjectMap
+-- | Parses structure data from ObjectMap
+--
 structureData :: Monad m => Map Text Object -> m StructureData
 structureData mp = do ttl' <- atPM mp "title" asStr
                       sid' <- atPM mp "structureId" asStr
@@ -75,8 +82,8 @@ structureData mp = do ttl' <- atPM mp "title" asStr
                       sg'  <- atPM mp "spaceGroup" asStr
                       uc'  <- (>>= ucDec) <$> atPM mp "unitCell" asFloatList
                       nol' <- ((>>= asFloatList) <$>) <$> atPM mp "ncsOperatorList" asObjectList
-                      bal' <- (>>= sequence . map (transformObjectMap >=> bioAssembly)) <$> atPM mp "bioAssemblyList" asObjectList
-                      el'  <- (>>= sequence . map (transformObjectMap >=> entity)) <$> atPM mp "entityList" asObjectList
+                      bal' <- (>>= traverse (transformObjectMap >=> bioAssembly)) <$> atPM mp "bioAssemblyList" asObjectList
+                      el'  <- (>>= traverse (transformObjectMap >=> entity)) <$> atPM mp "entityList" asObjectList
                       res' <- atPM mp "resolution" asFloat
                       rf'  <- atPM mp "rFree" asFloat
                       rw'  <- atPM mp "rWork" asFloat
@@ -86,19 +93,22 @@ structureData mp = do ttl' <- atPM mp "title" asStr
                       pure $ StructureData ttl' sid' dd' rd' nb' na' ng' nc' nm' sg' uc' nol'
                                            bal' el' res' rf' rw' em' btl' bol'
 
--- |Parses bio assembly data from ObjectMap
+-- | Parses bio assembly data from ObjectMap
+--
 bioAssembly :: Monad m => Map Text Object -> m Assembly
 bioAssembly mp = do nme' <- atP mp "name" asStr
-                    tlt' <- atP mp "transformList" asObjectList >>= sequence . map (transformObjectMap >=> transform)
+                    tlt' <- atP mp "transformList" asObjectList >>= traverse (transformObjectMap >=> transform)
                     pure $ Assembly tlt' nme'
 
--- |Parses transform data from ObjectMap
+-- | Parses transform data from ObjectMap
+--
 transform :: Monad m => Map Text Object -> m Transform
 transform mp = do cil' <- atP mp "chainIndexList" asIntList
                   mtx' <- atP mp "matrix" asFloatList
                   pure $ Transform cil' mtx'
 
--- |Parses entity data from ObjectMap
+-- | Parses entity data from ObjectMap
+--
 entity :: Monad m => Map Text Object -> m Entity
 entity mp = do cil' <- atP mp "chainIndexList" asIntList
                dsc' <- atP mp "description" asStr

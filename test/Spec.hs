@@ -10,5 +10,5 @@ main = hspec $
     it "should parse 1FSD" $ do
       contents <- B.readFile "resource/1FSD.mmtf"
       m <- decode contents
-      let sid = (structureId . structure) m
-      sid `shouldBe` Just "1FSD"
+      (structureId . structure) m `shouldBe` Just "1FSD"
+      (numModels . structure) m `shouldBe` 41
