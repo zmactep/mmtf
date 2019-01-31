@@ -1,5 +1,5 @@
 name:                mmtf
-version:             0.1.1.0
+version:             0.1.2.0
 synopsis:            Macromolecular Transmission Format implementation
 description:         Haskell implementation of MMTF biological structure format.
 homepage:            https://github.com/zmactep/mmtf#readme
@@ -16,10 +16,10 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Bio.MMTF
+                     , Bio.MMTF.Decode.Codec
   other-modules:       Bio.MMTF.Type
                      , Bio.MMTF.MessagePack
                      , Bio.MMTF.Decode
-                     , Bio.MMTF.Decode.Codec
                      , Bio.MMTF.Decode.MessagePack
   build-depends:       base >= 4.8 && < 5
                      , data-msgpack >= 0.0.9 && < 0.1

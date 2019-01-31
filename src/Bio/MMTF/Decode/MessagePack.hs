@@ -24,6 +24,12 @@ atP m k conv =
 atPM :: Monad m => Map Text Object -> Text -> (Object -> m a) -> m (Maybe a)
 atPM m k conv = traverse conv $ M.lookup k m
 
+atPMD :: Monad m => Map Text Object -> Text -> (Object -> m a) -> a -> m a
+atPMD m k conv def = do x <- atPM m k conv
+                        case x of
+                          Just r  -> pure r
+                          Nothing -> pure def
+                       
 asStr :: Monad m => Object -> m Text
 asStr (ObjectStr s) = pure s
 asStr _             = fail "Not a string data"

@@ -72,26 +72,26 @@ data FormatData = FormatData { mmtfVersion  :: !Text -- ^ The version number of 
 
 -- | Structure data
 --
-data StructureData = StructureData { title               :: !(Maybe Text)       -- ^ A short description of the structural data included in the file
-                                   , structureId         :: !(Maybe Text)       -- ^ An ID for the structure, for example the PDB ID if applicable
-                                   , depositionDate      :: !(Maybe Text)       -- ^ A date that relates to the deposition of the structure in a database
-                                   , releaseDate         :: !(Maybe Text)       -- ^ A date that relates to the release of the structure in a database
+data StructureData = StructureData { title               :: !Text               -- ^ A short description of the structural data included in the file
+                                   , structureId         :: !Text               -- ^ An ID for the structure, for example the PDB ID if applicable
+                                   , depositionDate      :: !Text               -- ^ A date that relates to the deposition of the structure in a database
+                                   , releaseDate         :: !Text               -- ^ A date that relates to the release of the structure in a database
                                    , numBonds            :: !Int32              -- ^ The overall number of bonds
                                    , numAtoms            :: !Int32              -- ^ The overall number of atoms in the structure
                                    , numGroups           :: !Int32              -- ^ The overall number of groups in the structure
                                    , numChains           :: !Int32              -- ^ The overall number of chains in the structure
                                    , numModels           :: !Int32              -- ^ The overall number of models in the structure
-                                   , spaceGroup          :: !(Maybe Text)       -- ^ The Hermann-Mauguin space-group symbol
+                                   , spaceGroup          :: !Text               -- ^ The Hermann-Mauguin space-group symbol
                                    , unitCell            :: !(Maybe UnitCell)   -- ^ Array of six values defining the unit cell
-                                   , ncsOperatorList     :: !(Maybe [[Float]])  -- ^ List of lists representing 4x4 transformation matrices that are stored linearly in row major order (transformation matrices describe noncrystallographic symmetry operations needed to create all molecules in the unit cell)
-                                   , bioAssemblyList     :: !(Maybe [Assembly]) -- ^ List of instructions on how to transform coordinates for an array of chains to create (biological) assemblies
-                                   , entityList          :: !(Maybe [Entity])   -- ^ List of unique molecular entities within the structure
+                                   , ncsOperatorList     :: ![[Float]]          -- ^ List of lists representing 4x4 transformation matrices that are stored linearly in row major order (transformation matrices describe noncrystallographic symmetry operations needed to create all molecules in the unit cell)
+                                   , bioAssemblyList     :: ![Assembly]         -- ^ List of instructions on how to transform coordinates for an array of chains to create (biological) assemblies
+                                   , entityList          :: ![Entity]           -- ^ List of unique molecular entities within the structure
                                    , resolution          :: !(Maybe Float)      -- ^ The experimental resolution in Angstrom
                                    , rFree               :: !(Maybe Float)      -- ^ The R-free value
                                    , rWork               :: !(Maybe Float)      -- ^ The R-work value
-                                   , experimentalMethods :: !(Maybe [Text])     -- ^ List of experimental methods employed for structure determination
-                                   , bondAtomList        :: !(Maybe [Int32])    -- ^ Pairs of values represent indices of covalently bonded atoms [binary (type 4)]
-                                   , bondOrderList       :: !(Maybe [Int8])     -- ^ List of bond orders for bonds in 'bondAtomList' [binary (type 2)]
+                                   , experimentalMethods :: ![Text]             -- ^ List of experimental methods employed for structure determination
+                                   , bondAtomList        :: ![Int32]            -- ^ Pairs of values represent indices of covalently bonded atoms [binary (type 4)]
+                                   , bondOrderList       :: ![Int8]             -- ^ List of bond orders for bonds in 'bondAtomList' [binary (type 2)]
                                    }
   deriving (Show, Eq)
 
@@ -105,7 +105,7 @@ data ModelData = ModelData { chainsPerModel :: ![Int32] -- ^ List of the number 
 --
 data ChainData = ChainData { groupsPerChain :: ![Int32]        -- ^ List of the number of groups (aka residues) in each chain
                            , chainIdList    :: ![Text]         -- ^ List of chain IDs [binary (type 5)]
-                           , chainNameList  :: !(Maybe [Text]) -- ^ List of chain names [binary (type 5)]
+                           , chainNameList  :: ![Text]         -- ^ List of chain names [binary (type 5)]
                            }
   deriving (Show, Eq)
 
@@ -114,21 +114,21 @@ data ChainData = ChainData { groupsPerChain :: ![Int32]        -- ^ List of the 
 data GroupData = GroupData { groupList         :: ![GroupType]                  -- ^ List of groupType objects
                            , groupTypeList     :: ![Int32]                      -- ^ List of pointers to 'groupType' entries in 'groupList' by their keys [binary (type 4)]
                            , groupIdList       :: ![Int32]                      -- ^ List of group (residue) numbers [binary (type 8)]
-                           , secStructList     :: !(Maybe [SecondaryStructure]) -- ^ List of secondary structure assignments [binary (type 2)]
-                           , insCodeList       :: !(Maybe [Char])               -- ^ List of insertion codes, one for each group (residue) [binary (type 6)]
-                           , sequenceIndexList :: !(Maybe [Int32])              -- ^ List of indices that point into the sequence property of an entity object in the 'entityList' field that is associated with the chain the group belongs to [binary (type 8)]
+                           , secStructList     :: ![SecondaryStructure]         -- ^ List of secondary structure assignments [binary (type 2)]
+                           , insCodeList       :: ![Char]                       -- ^ List of insertion codes, one for each group (residue) [binary (type 6)]
+                           , sequenceIndexList :: ![Int32]                      -- ^ List of indices that point into the sequence property of an entity object in the 'entityList' field that is associated with the chain the group belongs to [binary (type 8)]
                            }
   deriving (Show, Eq)
 
 -- | Atoms data
 --
-data AtomData = AtomData { atomIdList    :: !(Maybe [Int32]) -- ^ List of atom serial numbers [binary (type 8)]
-                         , altLocList    :: !(Maybe [Char])  -- ^ List of alternate location labels, one for each atom [binary (type 6)]
-                         , bFactorList   :: !(Maybe [Float]) -- ^ List of atom B-factors in in A^2, one for each atom [binary (type 10)]
+data AtomData = AtomData { atomIdList    :: ![Int32]         -- ^ List of atom serial numbers [binary (type 8)]
+                         , altLocList    :: ![Char]          -- ^ List of alternate location labels, one for each atom [binary (type 6)]
+                         , bFactorList   :: ![Float]         -- ^ List of atom B-factors in in A^2, one for each atom [binary (type 10)]
                          , xCoordList    :: ![Float]         -- ^ List of x atom coordinates in A, one for each atom [binary (type 10)]
                          , yCoordList    :: ![Float]         -- ^ List of y atom coordinates in A, one for each atom [binary (type 10)]
                          , zCoordList    :: ![Float]         -- ^ List of z atom coordinates in A, one for each atom [binary (type 10)]
-                         , occupancyList :: !(Maybe [Float]) -- ^ List of atom occupancies, one for each atom [binary (type 9)]
+                         , occupancyList :: ![Float]         -- ^ List of atom occupancies, one for each atom [binary (type 9)]
                          }
   deriving (Show, Eq)
 
