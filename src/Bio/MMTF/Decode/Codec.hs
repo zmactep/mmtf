@@ -23,6 +23,7 @@ data BinaryData = BD { binaryCodec  :: !Int32
                      , binaryParam  :: !Int32
                      , binaryData   :: !ByteString
                      }
+  deriving Show
 
 -- | Parse useless header for binary data
 --
@@ -162,3 +163,10 @@ ssDec n | n == 0    = PiHelix
 ucDec :: Monad m => [Float] -> m UnitCell
 ucDec [a,b,c,d,e,f] = pure $ UnitCell a b c d e f
 ucDec _             = fail "Wrong list format for unit cell"
+
+m44Dec :: Monad m => [Float] -> m M44
+m44Dec [ a11, a12, a13, a14
+       , a21, a22, a23, a24
+       , a31, a32, a33, a34
+       , a41, a42, a43, a44] = pure $ M44 a11 a12 a13 a14 a21 a22 a23 a24 a31 a32 a33 a34 a41 a42 a43 a44
+m44Dec _                     = fail "Wrong list format for 4x4 transformation matrix"
